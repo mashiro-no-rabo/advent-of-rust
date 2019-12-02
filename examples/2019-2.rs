@@ -2,9 +2,10 @@ use async_std::fs::File;
 use async_std::io::BufReader;
 use async_std::prelude::*;
 use async_std::task;
+use futures::future::join_all;
 use std::str;
 
-fn compute(mem: &mut Vec<usize>) -> Result<(), ()> {
+fn compute(mem: &mut Vec<usize>) -> Result<usize, ()> {
   // program counter
   let mut pc = 0;
 
@@ -29,18 +30,62 @@ fn compute(mem: &mut Vec<usize>) -> Result<(), ()> {
     }
   }
 
-  Ok(())
+  Ok(mem[0])
 }
 
-fn part1(mem: &[usize]) {
-  let mut part1_mem = mem.to_vec().clone();
+#[allow(clippy::ptr_arg)]
+fn part1(mem: &Vec<usize>) {
+  let mut part1_mem = mem.clone();
 
-  // Program 1 tweak:
+  // Part 1 tweak:
   part1_mem[1] = 12;
   part1_mem[2] = 2;
-  let _ = compute(&mut part1_mem);
 
-  println!("Postion 0: {}", part1_mem[0]);
+  println!("Part 1 output: {}", compute(&mut part1_mem).unwrap());
+}
+
+#[allow(clippy::ptr_arg)]
+async fn part2(mem: &Vec<usize>) {
+  let mut futs = vec![];
+
+  for noun in 0..=99 {
+    for verb in 0..=99 {
+      // each run needs a fresh memory
+      let mut futmem = mem.clone();
+
+      // move ownership into block
+      let fut = async move {
+        futmem[1] = noun;
+        futmem[2] = verb;
+
+        // attach context (noun, verb)
+        match compute(&mut futmem) {
+          Ok(output) => Ok((output, noun, verb)),
+          _ => Err(()),
+        }
+      };
+
+      futs.push(fut);
+    }
+  }
+
+  // run all the futures, preferably we only run until got
+  // first correct answer and discard all other futures
+  let results = join_all(futs).await;
+
+  // find the result we want
+  let result = results.into_iter().find(|x| {
+    if let Ok((output, _, _)) = x {
+      *output == 19_690_720
+    } else {
+      false
+    }
+  });
+
+  // unpack and print
+  if let Some(Ok((_, n, v))) = result {
+    println!("Part 2 answer: {}", n * 100 + v);
+  }
 }
 
 fn main() {
@@ -54,6 +99,8 @@ fn main() {
       .await;
 
     part1(&mem);
+
+    part2(&mem).await;
   });
 }
 
