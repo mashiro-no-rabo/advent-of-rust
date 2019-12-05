@@ -75,6 +75,42 @@ fn run_intcode(mem: &mut Vec<i64>, input: Vec<i64>) -> Result<Vec<i64>, ()> {
         outputs.push(output);
         pc += 2;
       }
+      5 => {
+        // jump-if-true
+        let op1 = read_param(mem[pc + 1], pmode[0], &mem);
+        if op1 != 0 {
+          pc = read_param(mem[pc + 2], pmode[1], &mem) as usize
+        } else {
+          pc += 3;
+        }
+      }
+      6 => {
+        // jump-if-false
+        let op1 = read_param(mem[pc + 1], pmode[0], &mem);
+        if op1 == 0 {
+          pc = read_param(mem[pc + 2], pmode[1], &mem) as usize
+        } else {
+          pc += 3;
+        }
+      }
+      7 => {
+        // less-than
+        let pstart = pc + 1;
+        let op1 = read_param(mem[pstart], pmode[0], &mem);
+        let op2 = read_param(mem[pstart + 1], pmode[1], &mem);
+        let target = mem[pc + 3];
+        mem[target as usize] = if op1 < op2 { 1 } else { 0 };
+        pc += 4;
+      }
+      8 => {
+        // equals
+        let pstart = pc + 1;
+        let op1 = read_param(mem[pstart], pmode[0], &mem);
+        let op2 = read_param(mem[pstart + 1], pmode[1], &mem);
+        let target = mem[pc + 3];
+        mem[target as usize] = if op1 == op2 { 1 } else { 0 };
+        pc += 4;
+      }
       _ => return Err(()),
     }
   }
@@ -95,8 +131,15 @@ fn main() {
     let mut run1_mem = mem.clone();
 
     println!(
-      "Diagnostic code: {}",
+      "Diagnostic code for system 1: {}",
       run_intcode(&mut run1_mem, vec![1]).unwrap().last().unwrap()
+    );
+
+    let mut run2_mem = mem.clone();
+
+    println!(
+      "Diagnostic code for system 5: {}",
+      run_intcode(&mut run2_mem, vec![5]).unwrap().last().unwrap()
     );
   });
 }
