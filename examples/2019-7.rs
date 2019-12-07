@@ -2,6 +2,7 @@ use async_std::fs::File;
 use async_std::io::BufReader;
 use async_std::prelude::*;
 use async_std::task;
+use std::collections::VecDeque;
 use std::str;
 
 type InstParamMode = (u8, Vec<u8>);
@@ -157,32 +158,32 @@ fn run_amplifiers_simple(mem: &[i64], settings: Vec<i64>) -> i64 {
 }
 
 fn run_amplifiers_feedback(mem: &[i64], settings: Vec<i64>) -> i64 {
-  let mut signal = 0;
+  // Since there should be only 1 output from each amplifier after setup
+  //   using a deque to pass around I/O should work
+  let mut inputs = VecDeque::new();
+  for x in settings {
+    inputs.push_back(x);
+  }
+  inputs.push_back(0);
 
-  // construct initial amplifier states
   let initial_state = State {
     pc: 0,
     mem: mem.to_vec(),
   };
-  let mut states = vec![];
-
-  for setting in settings {
-    match run_intcode(&initial_state, vec![setting]) {
-      WaitingForInput(s, _) => states.push(s),
-      _ => unimplemented!(),
-    }
-  }
+  let mut states = vec![initial_state; 5];
 
   loop {
     let mut new_states = vec![];
     for state in states {
-      match run_intcode(&state, vec![signal]) {
+      match run_intcode(&state, vec![inputs.pop_front().unwrap()]) {
         WaitingForInput(s, outputs) => {
           new_states.push(s);
-          signal = *outputs.first().unwrap();
+          if let Some(output) = outputs.first() {
+            inputs.push_back(*output);
+          }
         }
         Halted(outputs) => {
-          signal = *outputs.first().unwrap();
+          inputs.push_back(*outputs.first().unwrap());
         }
       }
     }
@@ -194,7 +195,7 @@ fn run_amplifiers_feedback(mem: &[i64], settings: Vec<i64>) -> i64 {
     }
   }
 
-  signal
+  inputs.pop_front().unwrap()
 }
 
 fn main() {
