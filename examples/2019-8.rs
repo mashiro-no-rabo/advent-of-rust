@@ -1,8 +1,7 @@
 use std::fs;
 
-fn main() {
-  let input = fs::read_to_string("inputs/2019/8.txt").unwrap();
-  let pixels = input.trim().bytes();
+fn part1(input: &str) -> i64 {
+  let pixels = input.bytes();
 
   let mut pos = 0; // position in a layer
   let mut zeros = 0; // num of 0 in current layer
@@ -42,5 +41,11 @@ fn main() {
     }
   }
 
-  println!("Solution 1: {}", result);
+  result
+}
+
+fn main() {
+  let input = fs::read_to_string("inputs/2019/8.txt").unwrap();
+
+  println!("Solution 1: {}", part1(input.trim()));
 }
