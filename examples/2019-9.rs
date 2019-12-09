@@ -184,6 +184,11 @@ fn run_test_mode(mem: &[i64]) -> i64 {
   run_intcode(&state, vec![1]).get_first_output()
 }
 
+fn run_boost(mem: &[i64]) -> i64 {
+  let state = State::new_with_mem(mem);
+  run_intcode(&state, vec![2]).get_first_output()
+}
+
 fn main() {
   task::block_on(async {
     let file = File::open("inputs/2019/9.txt").await.unwrap();
@@ -195,5 +200,6 @@ fn main() {
       .await;
 
     println!("BOOST keycode: {}", run_test_mode(&mem));
+    println!("Distress signal: {}", run_boost(&mem));
   });
 }
