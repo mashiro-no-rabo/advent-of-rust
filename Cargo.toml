@@ -7,4 +7,3 @@ edition = "2018"
 [dependencies]
 async-std = {version = "1.2", features = ["unstable"]}
 futures = "0.3"
-fraction = {version = "0.6", default-features = false}

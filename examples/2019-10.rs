@@ -1,23 +1,44 @@
 use std::fs;
 
-use fraction::Fraction;
+type Position = (i64, i64);
 
-type Position = (usize, usize);
+#[derive(Debug)]
+struct Fraction {
+  a: i64,
+  b: i64,
+}
+
+impl Fraction {
+  fn from(in_a: i64, in_b: i64) -> Self {
+    let mut i = 2;
+    let mut a = in_a;
+    let mut b = in_b;
+    while (i <= a.abs()) && (i <= b.abs()) {
+      while (a % i == 0) && (b % i == 0) {
+        a /= i;
+        b /= i;
+      }
+      i += 1;
+    }
+
+    Self { a, b }
+  }
+
+  fn blocks(&self, other: &Self) -> bool {
+    if (self.a == 0) && (other.a == 0) {
+      // when in straight line, need to ensure the direction in other axis is same
+      (self.b >= 0) == (other.b >= 0)
+    } else if (self.b == 0) && (other.b == 0) {
+      // same as ^
+      (self.a >= 0) == (other.a >= 0)
+    } else {
+      (self.a == other.a) && (self.b == other.b)
+    }
+  }
+}
 
 fn blocks(root: &Position, a: &Position, b: &Position) -> bool {
-  let ax = a.0 as i64 - root.0 as i64;
-  let ay = a.1 as i64 - root.1 as i64;
-  let bx = b.0 as i64 - root.0 as i64;
-  let by = b.1 as i64 - root.1 as i64;
-
-  // ensure they are in the same quadrant, Fraction does not handle signed integers
-  if (ax >= 0) == (bx >= 0) && (ay >= 0) == (by >= 0) {
-    let diffa = Fraction::new(ax.abs() as u64, ay.abs() as u64);
-    let diffb = Fraction::new(bx.abs() as u64, by.abs() as u64);
-    diffa == diffb
-  } else {
-    false
-  }
+  Fraction::from(a.0 - root.0, a.1 - root.1).blocks(&Fraction::from(b.0 - root.0, b.1 - root.1))
 }
 
 fn find_best_location(asteroids: &[Position]) -> usize {
@@ -52,7 +73,7 @@ fn parse_asteroids(map: &str) -> Vec<Position> {
   for (y, line) in map.lines().enumerate() {
     for (x, byte) in line.bytes().enumerate() {
       if byte == b'#' {
-        asteroids.push((x, y));
+        asteroids.push((x as i64, y as i64));
       }
     }
   }
