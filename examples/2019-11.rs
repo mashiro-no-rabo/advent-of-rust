@@ -79,15 +79,6 @@ enum RunResult {
 }
 use RunResult::*;
 
-impl RunResult {
-  fn get_first_output(&self) -> i64 {
-    match self {
-      WaitingForInput(_, outputs) => *outputs.first().unwrap(),
-      Halted(outputs) => *outputs.first().unwrap(),
-    }
-  }
-}
-
 fn run_intcode(state: &State, inputs: Vec<i64>) -> RunResult {
   let mut pc = state.pc; // program counter
   let mut mem = state.mem.clone();
