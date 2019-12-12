@@ -2,7 +2,7 @@
 
 use std::fs;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct Coordinates {
   x: i64,
   y: i64,
@@ -21,7 +21,7 @@ impl Coordinates {
   }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct Moon {
   position: Coordinates,
   velocity: Coordinates,
@@ -100,6 +100,45 @@ fn total_energy(moons: &[Moon]) -> i64 {
     .sum()
 }
 
+fn find_repeat_steps(start: Vec<Moon>) -> i64 {
+  let mut steps = vec![None; 3]; // x, y, z
+  let mut step = 0;
+
+  let mut moons = start;
+  loop {
+    step += 1;
+    let mut new_moons = vec![];
+    for i in 0..moons.len() {
+      let this_moon = moons.remove(i);
+      new_moons.push(this_moon.new_with_gravity(&moons));
+      moons.insert(i, this_moon);
+    }
+    for m in new_moons.iter_mut() {
+      m.apply_velocity();
+    }
+
+    // record how many steps when speed are 0
+    if new_moons.iter().all(|m| m.velocity.x == 0) {
+      steps[0] = steps[0].or(Some(step));
+    }
+    if new_moons.iter().all(|m| m.velocity.y == 0) {
+      steps[1] = steps[1].or(Some(step));
+    }
+    if new_moons.iter().all(|m| m.velocity.z == 0) {
+      steps[2] = steps[2].or(Some(step));
+    }
+
+    if steps.iter().all(|x| x.is_some()) {
+      break;
+    }
+
+    moons = new_moons;
+  }
+
+  // then multiply all steps
+  steps.iter().fold(1, |p, x| p * x.unwrap())
+}
+
 fn parse_moons(input: &str) -> Vec<Moon> {
   let mut moons = vec![];
   for moon_str in input.lines() {
@@ -119,5 +158,6 @@ fn main() {
   let input = fs::read_to_string("inputs/2019/12.txt").unwrap();
   let moons = parse_moons(&input);
 
-  println!("Total energy: {}", total_energy(&simulate(moons, 1000)));
+  println!("Total energy: {}", total_energy(&simulate(moons.clone(), 1000)));
+  println!("Repeat after: {}", find_repeat_steps(moons));
 }
