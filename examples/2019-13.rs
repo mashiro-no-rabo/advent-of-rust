@@ -2,6 +2,7 @@ use async_std::fs::File;
 use async_std::io::BufReader;
 use async_std::prelude::*;
 use async_std::task;
+use std::collections::HashMap;
 use std::str;
 
 type InstParamMode = (u8, Vec<u8>);
@@ -194,6 +195,76 @@ fn count_block_tiles(mem: &[i64]) -> usize {
   }
 }
 
+fn play(mem: &[i64]) {
+  let mut modified = mem.to_vec();
+  modified[0] = 2;
+  let mut state = State::new_with_mem(&modified);
+  let mut input = vec![];
+
+  let mut map = HashMap::new();
+  let mut score = 0;
+
+  loop {
+    match run_intcode(&state, input) {
+      WaitingForInput(new_state, outputs) => {
+        process_outputs(&outputs, &mut map, &mut score);
+
+        // read input
+        use std::io;
+        let mut buffer = String::new();
+        io::stdin().read_line(&mut buffer).unwrap();
+        let joystick = buffer.trim().parse::<i64>().unwrap();
+
+        state = new_state;
+        input = vec![joystick];
+      }
+      Halted(outputs) => {
+        process_outputs(&outputs, &mut map, &mut score);
+        break;
+      }
+    }
+  }
+}
+
+fn process_outputs(outputs: &[i64], map: &mut HashMap<(i64, i64), i64>, score: &mut i64) {
+  // update map
+  let mut iter = outputs.iter();
+  while let Some(x) = iter.next() {
+    let y = *iter.next().unwrap();
+    let id = *iter.next().unwrap();
+
+    if *x == -1 {
+      // set score
+      *score = id;
+    }
+    map.insert((*x, y), id);
+  }
+
+  // print score
+  println!("\n===\nScore: {}\n===", score);
+
+  // print screen
+  let minx = map.keys().map(|pos| pos.0).min().unwrap();
+  let maxx = map.keys().map(|pos| pos.0).max().unwrap();
+  let miny = map.keys().map(|pos| pos.1).min().unwrap();
+  let maxy = map.keys().map(|pos| pos.1).max().unwrap();
+
+  // need to reverse Y axis
+  for y in miny..=maxy {
+    for x in minx..=maxx {
+      match *map.get(&(x, y)).unwrap_or(&0) {
+        1 => print!("@"),
+        2 => print!("o"),
+        3 => print!("#"),
+        4 => print!("B"),
+        _ => print!(" "),
+      }
+    }
+
+    println!();
+  }
+}
+
 fn main() {
   task::block_on(async {
     let file = File::open("inputs/2019/13.txt").await.unwrap();
@@ -205,5 +276,6 @@ fn main() {
       .await;
 
     println!("Block tiles: {}", count_block_tiles(&mem));
+    play(&mem);
   });
 }
