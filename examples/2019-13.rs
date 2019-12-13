@@ -195,7 +195,7 @@ fn count_block_tiles(mem: &[i64]) -> usize {
   }
 }
 
-fn play(mem: &[i64]) {
+fn auto_play(mem: &[i64]) -> i64 {
   let mut modified = mem.to_vec();
   modified[0] = 2;
   let mut state = State::new_with_mem(&modified);
@@ -207,16 +207,11 @@ fn play(mem: &[i64]) {
   loop {
     match run_intcode(&state, input) {
       WaitingForInput(new_state, outputs) => {
-        process_outputs(&outputs, &mut map, &mut score);
-
-        // read input
-        use std::io;
-        let mut buffer = String::new();
-        io::stdin().read_line(&mut buffer).unwrap();
-        let joystick = buffer.trim().parse::<i64>().unwrap();
-
+        input = vec![process_outputs(&outputs, &mut map, &mut score)];
+        if game_finished(&map) {
+          break;
+        }
         state = new_state;
-        input = vec![joystick];
       }
       Halted(outputs) => {
         process_outputs(&outputs, &mut map, &mut score);
@@ -224,45 +219,55 @@ fn play(mem: &[i64]) {
       }
     }
   }
+
+  score
 }
 
-fn process_outputs(outputs: &[i64], map: &mut HashMap<(i64, i64), i64>, score: &mut i64) {
+const BLOCK: i64 = 2;
+const PADDLE: i64 = 3;
+const BALL: i64 = 4;
+
+// returns next input
+fn process_outputs(outputs: &[i64], map: &mut HashMap<(i64, i64), i64>, score: &mut i64) -> i64 {
+  let mut ball = (0, 0);
+
   // update map
   let mut iter = outputs.iter();
-  while let Some(x) = iter.next() {
+  while let Some(px) = iter.next() {
+    let x = *px;
     let y = *iter.next().unwrap();
     let id = *iter.next().unwrap();
 
-    if *x == -1 {
+    if x == -1 {
       // set score
       *score = id;
     }
-    map.insert((*x, y), id);
-  }
 
-  // print score
-  println!("\n===\nScore: {}\n===", score);
-
-  // print screen
-  let minx = map.keys().map(|pos| pos.0).min().unwrap();
-  let maxx = map.keys().map(|pos| pos.0).max().unwrap();
-  let miny = map.keys().map(|pos| pos.1).min().unwrap();
-  let maxy = map.keys().map(|pos| pos.1).max().unwrap();
-
-  // need to reverse Y axis
-  for y in miny..=maxy {
-    for x in minx..=maxx {
-      match *map.get(&(x, y)).unwrap_or(&0) {
-        1 => print!("@"),
-        2 => print!("o"),
-        3 => print!("#"),
-        4 => print!("B"),
-        _ => print!(" "),
-      }
+    map.insert((x, y), id);
+    if id == BALL {
+      ball = (x, y);
     }
-
-    println!();
   }
+
+  // calculate paddle movement
+  let mut paddle = (0, 0);
+  for (pos, id) in map.iter() {
+    if *id == PADDLE {
+      paddle = *pos;
+      break;
+    }
+  }
+
+  use std::cmp::Ordering::*;
+  match paddle.0.cmp(&ball.0) {
+    Equal => 0,
+    Less => 1,
+    Greater => -1,
+  }
+}
+
+fn game_finished(map: &HashMap<(i64, i64), i64>) -> bool {
+  map.values().all(|x| *x != BLOCK)
 }
 
 fn main() {
@@ -276,6 +281,6 @@ fn main() {
       .await;
 
     println!("Block tiles: {}", count_block_tiles(&mem));
-    play(&mem);
+    println!("Score: {}", auto_play(&mem));
   });
 }
