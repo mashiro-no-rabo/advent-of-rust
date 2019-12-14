@@ -7,11 +7,40 @@ type ReactionInput = Vec<Production>;
 type Reactions = HashMap<Chemical, (u64, ReactionInput)>;
 
 fn one_fuel(racts: &Reactions) -> u64 {
+  fuels(racts, 1)
+}
+
+fn bs_trillion_ore(racts: &Reactions) -> u64 {
+  let mut lower = 0;
+  let mut upper = 1_000_000_000_000;
+
+  while upper - lower > 10 {
+    let mid = lower + ((upper - lower) / 2);
+    let mid_ores = fuels(racts, mid);
+
+    if mid_ores > 1_000_000_000_000 {
+      // search within [lower, mid]
+      upper = mid;
+    } else {
+      lower = mid;
+    }
+  }
+
+  while fuels(racts, lower + 1) <= 1_000_000_000_000 {
+    lower += 1;
+  }
+
+  lower
+}
+
+fn fuels(racts: &Reactions, want: u64) -> u64 {
   let mut reqs: Products = HashMap::new();
   let mut extra: Products = HashMap::new();
   let mut ores = 0;
 
-  reqs.insert("FUEL".to_string(), 1);
+  if want > 0 {
+    reqs.insert("FUEL".to_string(), want);
+  }
 
   loop {
     if reqs.is_empty() {
@@ -147,6 +176,7 @@ fn main() {
   let reactions = parse_reactions(&input);
 
   println!("1 FUEL needs: {} OREs", one_fuel(&reactions));
+  println!("1 trillion OREs can produce: {} FUEL", bs_trillion_ore(&reactions));
 }
 
 #[cfg(test)]
@@ -191,6 +221,7 @@ mod tests {
 3 DCFZ, 7 NZVS, 5 HKGWZ, 10 PSHF => 8 KHKGT";
     let reactions = parse_reactions(&input);
     assert_eq!(13312, one_fuel(&reactions));
+    assert_eq!(82_892_753, bs_trillion_ore(&reactions));
   }
 
   #[test]
@@ -209,6 +240,7 @@ mod tests {
 176 ORE => 6 VJHF";
     let reactions = parse_reactions(&input);
     assert_eq!(180_697, one_fuel(&reactions));
+    assert_eq!(5_586_022, bs_trillion_ore(&reactions));
   }
 
   #[test]
@@ -232,5 +264,6 @@ mod tests {
 5 BHXH, 4 VRPVC => 5 LTCX";
     let reactions = parse_reactions(&input);
     assert_eq!(2_210_736, one_fuel(&reactions));
+    assert_eq!(460_664, bs_trillion_ore(&reactions));
   }
 }
