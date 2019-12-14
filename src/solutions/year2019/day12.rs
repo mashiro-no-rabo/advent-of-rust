@@ -154,7 +154,7 @@ fn parse_moons(input: &str) -> Vec<Moon> {
   moons
 }
 
-fn main() {
+pub fn solution() {
   let input = fs::read_to_string("inputs/2019/12.txt").unwrap();
   let moons = parse_moons(&input);
 

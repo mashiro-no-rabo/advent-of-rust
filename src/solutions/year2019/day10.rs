@@ -177,7 +177,7 @@ fn parse_asteroids(map: &str) -> Vec<Position> {
   asteroids
 }
 
-fn main() {
+pub fn solution() {
   let input = fs::read_to_string("inputs/2019/10.txt").unwrap();
   let asteroids = parse_asteroids(&input);
 

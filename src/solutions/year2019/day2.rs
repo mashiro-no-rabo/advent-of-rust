@@ -88,7 +88,7 @@ async fn part2(mem: &Vec<usize>) {
   }
 }
 
-fn main() {
+pub fn solution() {
   task::block_on(async {
     let file = File::open("inputs/2019/2.txt").await.unwrap();
     let mem: Vec<usize> = BufReader::new(file)

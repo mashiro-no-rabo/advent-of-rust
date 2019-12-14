@@ -118,7 +118,7 @@ fn run_intcode(mem: &mut Vec<i64>, input: Vec<i64>) -> Result<Vec<i64>, ()> {
   Ok(outputs)
 }
 
-fn main() {
+pub fn solution() {
   task::block_on(async {
     let file = File::open("inputs/2019/5.txt").await.unwrap();
     let mem: Vec<i64> = BufReader::new(file)

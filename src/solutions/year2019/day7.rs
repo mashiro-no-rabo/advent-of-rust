@@ -5,154 +5,12 @@ use async_std::task;
 use std::collections::VecDeque;
 use std::str;
 
-type InstParamMode = (u8, Vec<u8>);
-fn parse_inst(code: i64) -> InstParamMode {
-  if code < 0 {
-    unimplemented!()
-  }
-
-  let inst = code % 100;
-
-  let mut param_modes = vec![0; 3];
-  let mut modes = code / 100;
-  let mut idx = 0;
-  while modes > 9 {
-    param_modes[idx] = (modes % 10) as u8;
-    modes /= 10;
-    idx += 1;
-  }
-  param_modes[idx] = modes as u8;
-
-  (inst as u8, param_modes)
-}
-
-fn read_param(param: i64, mode: u8, mem: &[i64]) -> i64 {
-  match mode {
-    0 => mem[param as usize],
-    1 => param,
-    _ => unimplemented!(),
-  }
-}
-
-#[derive(Debug, Clone)]
-struct State {
-  pc: usize,
-  mem: Vec<i64>,
-}
-
-enum RunResult {
-  WaitingForInput(State, Vec<i64>),
-  Halted(Vec<i64>),
-}
-use RunResult::*;
-
-impl RunResult {
-  fn get_first_output(&self) -> i64 {
-    match self {
-      WaitingForInput(_, outputs) => *outputs.first().unwrap(),
-      Halted(outputs) => *outputs.first().unwrap(),
-    }
-  }
-}
-
-fn run_intcode(state: &State, inputs: Vec<i64>) -> RunResult {
-  let mut pc = state.pc; // program counter
-  let mut mem = state.mem.clone();
-
-  let mut input_idx = 0;
-  let mut outputs = vec![];
-
-  loop {
-    // parse instruction
-    let (inst, pmode) = parse_inst(mem[pc]);
-
-    match inst {
-      99 => return Halted(outputs),
-      1 => {
-        // plus
-        let pstart = pc + 1;
-        let op1 = read_param(mem[pstart], pmode[0], &mem);
-        let op2 = read_param(mem[pstart + 1], pmode[1], &mem);
-        let target = mem[pc + 3];
-        mem[target as usize] = op1 + op2;
-        pc += 4;
-      }
-      2 => {
-        // multiply
-        let pstart = pc + 1;
-        let op1 = read_param(mem[pstart], pmode[0], &mem);
-        let op2 = read_param(mem[pstart + 1], pmode[1], &mem);
-        let target = mem[pc + 3];
-        mem[target as usize] = op1 * op2;
-        pc += 4;
-      }
-      3 => {
-        // input
-        if input_idx < inputs.len() {
-          let target = mem[pc + 1];
-          mem[target as usize] = inputs[input_idx];
-          input_idx += 1;
-          pc += 2;
-        } else {
-          let paused_state = State { pc, mem };
-          return WaitingForInput(paused_state, outputs);
-        }
-      }
-      4 => {
-        // output
-        let output = read_param(mem[pc + 1], pmode[0], &mem);
-        outputs.push(output);
-        pc += 2;
-      }
-      5 => {
-        // jump-if-true
-        let op1 = read_param(mem[pc + 1], pmode[0], &mem);
-        if op1 != 0 {
-          pc = read_param(mem[pc + 2], pmode[1], &mem) as usize
-        } else {
-          pc += 3;
-        }
-      }
-      6 => {
-        // jump-if-false
-        let op1 = read_param(mem[pc + 1], pmode[0], &mem);
-        if op1 == 0 {
-          pc = read_param(mem[pc + 2], pmode[1], &mem) as usize
-        } else {
-          pc += 3;
-        }
-      }
-      7 => {
-        // less-than
-        let pstart = pc + 1;
-        let op1 = read_param(mem[pstart], pmode[0], &mem);
-        let op2 = read_param(mem[pstart + 1], pmode[1], &mem);
-        let target = mem[pc + 3];
-        mem[target as usize] = if op1 < op2 { 1 } else { 0 };
-        pc += 4;
-      }
-      8 => {
-        // equals
-        let pstart = pc + 1;
-        let op1 = read_param(mem[pstart], pmode[0], &mem);
-        let op2 = read_param(mem[pstart + 1], pmode[1], &mem);
-        let target = mem[pc + 3];
-        mem[target as usize] = if op1 == op2 { 1 } else { 0 };
-        pc += 4;
-      }
-      _ => unimplemented!(),
-    }
-  }
-}
+use super::int_code::{RunResult::*, State};
 
 fn run_amplifiers_simple(mem: &[i64], settings: Vec<i64>) -> i64 {
   let mut signal = 0;
   for setting in settings {
-    let state = State {
-      pc: 0,
-      mem: mem.to_vec(),
-    };
-    signal = run_intcode(&state, vec![setting, signal]).get_first_output();
+    signal = State::new_with_mem(mem).run(vec![setting, signal]).get_first_output();
   }
   signal
 }
@@ -166,16 +24,13 @@ fn run_amplifiers_feedback(mem: &[i64], settings: Vec<i64>) -> i64 {
   }
   inputs.push_back(0);
 
-  let initial_state = State {
-    pc: 0,
-    mem: mem.to_vec(),
-  };
+  let initial_state = State::new_with_mem(mem);
   let mut states = vec![initial_state; 5];
 
   loop {
     let mut new_states = vec![];
     for state in states {
-      match run_intcode(&state, vec![inputs.pop_front().unwrap()]) {
+      match state.run(vec![inputs.pop_front().unwrap()]) {
         WaitingForInput(s, outputs) => {
           new_states.push(s);
           if let Some(output) = outputs.first() {
@@ -198,7 +53,7 @@ fn run_amplifiers_feedback(mem: &[i64], settings: Vec<i64>) -> i64 {
   inputs.pop_front().unwrap()
 }
 
-fn main() {
+pub fn solution() {
   task::block_on(async {
     let file = File::open("inputs/2019/7.txt").await.unwrap();
     let mem: Vec<i64> = BufReader::new(file)

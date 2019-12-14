@@ -171,7 +171,7 @@ fn parse_production(input: &str) -> Production {
   )
 }
 
-fn main() {
+pub fn solution() {
   let input = std::fs::read_to_string("inputs/2019/14.txt").unwrap();
   let reactions = parse_reactions(&input);
 

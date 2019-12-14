@@ -73,7 +73,7 @@ fn part2(input: &str) {
   }
 }
 
-fn main() {
+pub fn solution() {
   let input = fs::read_to_string("inputs/2019/8.txt").unwrap();
 
   println!("Solution 1: {}", part1(input.trim()));

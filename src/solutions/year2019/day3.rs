@@ -172,7 +172,7 @@ fn find_min_signal_delay(wire1: &Wire, wire2: &Wire) -> i64 {
   min_sum
 }
 
-fn main() {
+pub fn solution() {
   let input = fs::read_to_string("inputs/2019/3.txt").unwrap();
   let mut lines = input.lines();
   let wire1 = build_wire(lines.next().unwrap());

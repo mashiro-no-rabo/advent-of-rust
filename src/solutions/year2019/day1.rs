@@ -13,7 +13,7 @@ fn calc_fuel(mass: i64) -> i64 {
   }
 }
 
-fn main() {
+pub fn solution() {
   task::block_on(async {
     let file = File::open("inputs/2019/1.txt").await.unwrap();
     let lines: Vec<i64> = BufReader::new(file)

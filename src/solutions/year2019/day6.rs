@@ -71,7 +71,7 @@ fn part2(input: &str) -> i64 {
   transfers - 2
 }
 
-fn main() {
+pub fn solution() {
   let input = fs::read_to_string("inputs/2019/6.txt").unwrap();
   println!("Total orbits: {}", part1(&input));
   println!("Transfers required: {}", part2(&input));

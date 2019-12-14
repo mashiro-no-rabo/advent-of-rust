@@ -32,7 +32,7 @@ fn valid_password(num: i64) -> bool {
   (repeated_count == 2) || good_repeat
 }
 
-fn main() {
+pub fn solution() {
   let mut count = 0;
 
   for num in 109_165..=576_723 {
