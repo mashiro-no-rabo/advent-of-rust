@@ -1,9 +1,3 @@
-use async_std::fs::File;
-use async_std::io::BufReader;
-use async_std::prelude::*;
-use async_std::task;
-use std::str;
-
 type InstParamMode = (u8, Vec<u8>);
 fn parse_inst(code: i64) -> Result<InstParamMode, ()> {
   if code < 0 {
@@ -119,27 +113,20 @@ fn run_intcode(mem: &mut Vec<i64>, input: Vec<i64>) -> Result<Vec<i64>, ()> {
 }
 
 pub fn solution() {
-  task::block_on(async {
-    let file = File::open("inputs/2019/5.txt").await.unwrap();
-    let mem: Vec<i64> = BufReader::new(file)
-      .split(b',')
-      .filter_map(|x| x.ok())
-      .filter_map(|x| str::from_utf8(&x).unwrap().trim().parse::<i64>().ok())
-      .collect()
-      .await;
+  let input = std::fs::read_to_string("inputs/2019/5.txt").unwrap();
+  let mem: Vec<i64> = input.split(',').map(|x| x.trim().parse::<i64>().unwrap()).collect();
 
-    let mut run1_mem = mem.clone();
+  let mut run1_mem = mem.clone();
 
-    println!(
-      "Diagnostic code for system 1: {}",
-      run_intcode(&mut run1_mem, vec![1]).unwrap().last().unwrap()
-    );
+  println!(
+    "Diagnostic code for system 1: {}",
+    run_intcode(&mut run1_mem, vec![1]).unwrap().last().unwrap()
+  );
 
-    let mut run2_mem = mem.clone();
+  let mut run2_mem = mem.clone();
 
-    println!(
-      "Diagnostic code for system 5: {}",
-      run_intcode(&mut run2_mem, vec![5]).unwrap().last().unwrap()
-    );
-  });
+  println!(
+    "Diagnostic code for system 5: {}",
+    run_intcode(&mut run2_mem, vec![5]).unwrap().last().unwrap()
+  );
 }

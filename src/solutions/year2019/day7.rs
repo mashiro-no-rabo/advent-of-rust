@@ -1,9 +1,4 @@
-use async_std::fs::File;
-use async_std::io::BufReader;
-use async_std::prelude::*;
-use async_std::task;
 use std::collections::VecDeque;
-use std::str;
 
 use super::int_code::{RunResult::*, State};
 
@@ -54,28 +49,21 @@ fn run_amplifiers_feedback(mem: &[i64], settings: Vec<i64>) -> i64 {
 }
 
 pub fn solution() {
-  task::block_on(async {
-    let file = File::open("inputs/2019/7.txt").await.unwrap();
-    let mem: Vec<i64> = BufReader::new(file)
-      .split(b',')
-      .filter_map(|x| x.ok())
-      .filter_map(|x| str::from_utf8(&x).unwrap().trim().parse::<i64>().ok())
-      .collect()
-      .await;
+  let input = std::fs::read_to_string("inputs/2019/7.txt").unwrap();
+  let mem: Vec<i64> = input.split(',').map(|x| x.trim().parse::<i64>().unwrap()).collect();
 
-    let mut variations1 = vec![];
+  let mut variations1 = vec![];
 
-    for a in 0..5 {
-      for b in 0..5 {
-        if b != a {
-          for c in 0..5 {
-            if c != a && c != b {
-              for d in 0..5 {
-                if d != a && d != b && d != c {
-                  for e in 0..5 {
-                    if e != a && e != b && e != c && e != d {
-                      variations1.push(vec![a, b, c, d, e]);
-                    }
+  for a in 0..5 {
+    for b in 0..5 {
+      if b != a {
+        for c in 0..5 {
+          if c != a && c != b {
+            for d in 0..5 {
+              if d != a && d != b && d != c {
+                for e in 0..5 {
+                  if e != a && e != b && e != c && e != d {
+                    variations1.push(vec![a, b, c, d, e]);
                   }
                 }
               }
@@ -84,29 +72,29 @@ pub fn solution() {
         }
       }
     }
+  }
 
-    println!(
-      "Highest signal: {}",
-      variations1
-        .iter()
-        .map(|ps| run_amplifiers_simple(&mem, ps.to_vec()))
-        .max()
-        .unwrap()
-    );
+  println!(
+    "Highest signal: {}",
+    variations1
+      .iter()
+      .map(|ps| run_amplifiers_simple(&mem, ps.to_vec()))
+      .max()
+      .unwrap()
+  );
 
-    let mut variations2 = vec![];
+  let mut variations2 = vec![];
 
-    for a in 5..=9 {
-      for b in 5..=9 {
-        if b != a {
-          for c in 5..=9 {
-            if c != a && c != b {
-              for d in 5..=9 {
-                if d != a && d != b && d != c {
-                  for e in 5..=9 {
-                    if e != a && e != b && e != c && e != d {
-                      variations2.push(vec![a, b, c, d, e]);
-                    }
+  for a in 5..=9 {
+    for b in 5..=9 {
+      if b != a {
+        for c in 5..=9 {
+          if c != a && c != b {
+            for d in 5..=9 {
+              if d != a && d != b && d != c {
+                for e in 5..=9 {
+                  if e != a && e != b && e != c && e != d {
+                    variations2.push(vec![a, b, c, d, e]);
                   }
                 }
               }
@@ -115,16 +103,16 @@ pub fn solution() {
         }
       }
     }
+  }
 
-    println!(
-      "Highest signal: {}",
-      variations2
-        .iter()
-        .map(|ps| run_amplifiers_feedback(&mem, ps.to_vec()))
-        .max()
-        .unwrap()
-    );
-  });
+  println!(
+    "Highest signal: {}",
+    variations2
+      .iter()
+      .map(|ps| run_amplifiers_feedback(&mem, ps.to_vec()))
+      .max()
+      .unwrap()
+  );
 }
 
 #[cfg(test)]

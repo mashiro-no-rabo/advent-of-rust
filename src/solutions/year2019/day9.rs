@@ -1,9 +1,3 @@
-use async_std::fs::File;
-use async_std::io::BufReader;
-use async_std::prelude::*;
-use async_std::task;
-use std::str;
-
 use super::int_code::State;
 
 fn run_test_mode(mem: &[i64]) -> i64 {
@@ -15,16 +9,9 @@ fn run_boost(mem: &[i64]) -> i64 {
 }
 
 pub fn solution() {
-  task::block_on(async {
-    let file = File::open("inputs/2019/9.txt").await.unwrap();
-    let mem: Vec<i64> = BufReader::new(file)
-      .split(b',')
-      .filter_map(|x| x.ok())
-      .filter_map(|x| str::from_utf8(&x).unwrap().trim().parse::<i64>().ok())
-      .collect()
-      .await;
+  let input = std::fs::read_to_string("inputs/2019/9.txt").unwrap();
+  let mem: Vec<i64> = input.split(',').map(|x| x.trim().parse::<i64>().unwrap()).collect();
 
-    println!("BOOST keycode: {}", run_test_mode(&mem));
-    println!("Distress signal: {}", run_boost(&mem));
-  });
+  println!("BOOST keycode: {}", run_test_mode(&mem));
+  println!("Distress signal: {}", run_boost(&mem));
 }

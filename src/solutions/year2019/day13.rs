@@ -1,9 +1,4 @@
-use async_std::fs::File;
-use async_std::io::BufReader;
-use async_std::prelude::*;
-use async_std::task;
 use std::collections::HashMap;
-use std::str;
 
 use super::int_code::{RunResult::*, State};
 
@@ -101,16 +96,9 @@ fn game_finished(map: &HashMap<(i64, i64), i64>) -> bool {
 }
 
 pub fn solution() {
-  task::block_on(async {
-    let file = File::open("inputs/2019/13.txt").await.unwrap();
-    let mem: Vec<i64> = BufReader::new(file)
-      .split(b',')
-      .filter_map(|x| x.ok())
-      .filter_map(|x| str::from_utf8(&x).unwrap().trim().parse::<i64>().ok())
-      .collect()
-      .await;
+  let input = std::fs::read_to_string("inputs/2019/13.txt").unwrap();
+  let mem: Vec<i64> = input.split(',').map(|x| x.trim().parse::<i64>().unwrap()).collect();
 
-    println!("Block tiles: {}", count_block_tiles(&mem));
-    println!("Score: {}", auto_play(&mem));
-  });
+  println!("Block tiles: {}", count_block_tiles(&mem));
+  println!("Score: {}", auto_play(&mem));
 }
