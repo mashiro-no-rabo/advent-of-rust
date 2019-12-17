@@ -28,7 +28,13 @@ fn read_param(param: i64, mode: u8, mem: &mut Vec<i64>, rbase: usize) -> i64 {
       mem[param as usize]
     }
     1 => param,
-    2 => mem[(rbase as i64 + param) as usize],
+    2 => {
+      let addr = (rbase as i64 + param) as usize;
+      if addr as usize >= mem.len() {
+        mem.resize(addr as usize + 1, 0);
+      }
+      mem[addr as usize]
+    }
     _ => unimplemented!(),
   }
 }
@@ -56,6 +62,7 @@ pub struct State {
   mem: Vec<i64>,
 }
 
+#[derive(Debug)]
 pub enum RunResult {
   WaitingForInput(State, Vec<i64>),
   Halted(Vec<i64>),
@@ -74,6 +81,10 @@ impl State {
       relative_base: 0,
       mem: mem.to_vec(),
     }
+  }
+
+  pub fn patch_memory(&mut self, addr: usize, value: i64) {
+    self.mem[addr] = value;
   }
 
   pub fn run(&self, inputs: Vec<i64>) -> RunResult {
