@@ -17,3 +17,4 @@ pub mod day8;
 pub mod day9;
 
 mod int_code;
+mod map;

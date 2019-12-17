@@ -1,4 +1,5 @@
 use super::int_code::{RunResult::*, State};
+use super::map::*;
 
 fn align_params(st: &State) -> u64 {
   let mut scafs = vec![];
@@ -20,14 +21,8 @@ fn align_params(st: &State) -> u64 {
   }
 
   scafs.clone().into_iter().fold(0, |acc, (x, y)| {
-    if (x > 0)
-      && (y > 0)
-      && scafs.contains(&(x - 1, y))
-      && scafs.contains(&(x + 1, y))
-      && scafs.contains(&(x, y - 1))
-      && scafs.contains(&(x, y + 1))
-    {
-      acc + (x * y)
+    if Direction::iter_all().all(|dir| scafs.contains(&dir.move_position(&(x, y)))) {
+      acc + (x * y) as u64
     } else {
       acc
     }
