@@ -72,7 +72,7 @@ impl RobotMove {
 
     let mut ret_moves = vec![];
 
-    // routine can't contain another routine
+    // strip off previous routines
     let mut routine: RobotMoves = moves.to_vec();
     while !routine.is_empty() {
       if let Raw(_, _) = routine[0] {
@@ -83,6 +83,11 @@ impl RobotMove {
     }
 
     if len > moves.len() {
+      return None;
+    }
+
+    // routine can't contain another routine
+    if (0..len).any(|i| if let Raw(_, _) = routine[i] { false } else { true }) {
       return None;
     }
 
@@ -250,6 +255,7 @@ fn collect_dust(st: &State) -> i64 {
   let mut rescue_robot = st.clone();
   rescue_robot.patch_memory(0, 2);
   if let Halted(outputs) = rescue_robot.run(inputs) {
+    // can't be bothered to deal with any other output
     *outputs.last().unwrap()
   } else {
     0
