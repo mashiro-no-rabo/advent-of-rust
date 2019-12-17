@@ -62,6 +62,12 @@ pub enum RunResult {
 }
 
 impl State {
+  pub fn from_file(path: &str) -> Self {
+    let input = std::fs::read_to_string(path).unwrap();
+    let mem: Vec<i64> = input.split(',').map(|x| x.trim().parse::<i64>().unwrap()).collect();
+    Self::new_with_mem(&mem)
+  }
+
   pub fn new_with_mem(mem: &[i64]) -> Self {
     Self {
       pc: 0,
