@@ -55,7 +55,7 @@ impl Iterator for DirectionIter {
 
 type Position = (i64, i64);
 
-fn bfs_min_steps(mem: &[i64]) -> i64 {
+fn bfs_min_steps(st: State) -> i64 {
   let mut steps = 0;
 
   let start_pos = (0, 0);
@@ -63,8 +63,7 @@ fn bfs_min_steps(mem: &[i64]) -> i64 {
   map.insert(start_pos, 0);
 
   let mut search = vec![];
-  let start_state = State::new_with_mem(mem);
-  search.push((start_pos, start_state));
+  search.push((start_pos, st));
 
   loop {
     steps += 1;
@@ -101,7 +100,7 @@ fn bfs_min_steps(mem: &[i64]) -> i64 {
   }
 }
 
-fn bfs_all(mem: &[i64]) -> i64 {
+fn bfs_all(st: State) -> i64 {
   let mut steps = 0;
 
   let start_pos = (0, 0);
@@ -109,8 +108,7 @@ fn bfs_all(mem: &[i64]) -> i64 {
   map.insert(start_pos, 0);
 
   let mut search = vec![];
-  let start_state = State::new_with_mem(mem);
-  search.push((start_pos, start_state));
+  search.push((start_pos, st));
 
   let mut oxygen = (0, 0);
 
@@ -177,9 +175,8 @@ fn bfs_all(mem: &[i64]) -> i64 {
 }
 
 pub fn solution() {
-  let input = std::fs::read_to_string("inputs/2019/15.txt").unwrap();
-  let mem: Vec<i64> = input.split(',').map(|x| x.trim().parse::<i64>().unwrap()).collect();
+  let state = State::from_file("inputs/2019/15.txt");
 
-  println!("Steps: {}", bfs_min_steps(&mem));
-  println!("Time: {}", bfs_all(&mem));
+  println!("Steps: {}", bfs_min_steps(state.clone()));
+  println!("Time: {}", bfs_all(state));
 }
