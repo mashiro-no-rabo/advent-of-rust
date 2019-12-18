@@ -31,4 +31,5 @@ solutions!(year2019, 2019 => [
   day15 15,
   day16 16,
   day17 17,
+  day18 18,
 ]);
