@@ -148,8 +148,8 @@ mod tests {
   #[test]
   fn test1() {
     let input = "#########
-#b.A.@.a#
-#########";
+  #b.A.@.a#
+  #########";
 
     let mz = Maze::from_str(input);
     assert_eq!(8, dfs_map(&mz, 0));
@@ -168,6 +168,7 @@ mod tests {
   }
 
   #[test]
+  #[ignore]
   fn test3() {
     let input = "#################
   #i.G..c...e..H.p#
