@@ -5,5 +5,5 @@ authors = ["LOU Xun <aquarhead@ela.build>"]
 edition = "2018"
 
 [dependencies]
-async-std = "1.7"
-futures = "0.3"
+# async-std = "1.7"
+# futures = "0.3"

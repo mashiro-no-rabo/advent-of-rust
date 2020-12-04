@@ -59,6 +59,7 @@ fn new_count(count: u64, ch: &char) -> u64 {
   }
 }
 
+#[cfg(test)]
 mod tests {
   use super::*;
 

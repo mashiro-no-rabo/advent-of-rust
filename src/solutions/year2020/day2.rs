@@ -46,6 +46,7 @@ fn verify2(line: &str) -> bool {
   occur1 ^ occur2
 }
 
+#[cfg(test)]
 mod tests {
   use super::*;
 
