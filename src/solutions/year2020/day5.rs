@@ -3,9 +3,20 @@ use std::fs;
 pub fn solution() {
   let content = fs::read_to_string("inputs/2020/5.txt").unwrap();
 
-  let highest = content.lines().map(seat_id).max().unwrap();
+  let ids: Vec<u32> = content.lines().map(seat_id).collect();
+
+  let highest = ids.iter().max().unwrap();
+
+  let mut my_id = 8;
+  loop {
+    if !ids.contains(&my_id) && ids.contains(&(my_id - 1)) && ids.contains(&(my_id + 1)) {
+      break;
+    }
+    my_id += 1;
+  }
 
   println!("Highest seat ID: {}", highest);
+  println!("My seat ID: {}", my_id);
 }
 
 fn seat_id(line: &str) -> u32 {
