@@ -20,4 +20,5 @@ solutions!(year2020, 2020 => [
   day4 4,
   day5 5,
   day6 6,
+  day7 7,
 ]);
