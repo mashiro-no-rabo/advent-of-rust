@@ -1,6 +1,5 @@
 use petgraph::graphmap::DiGraphMap;
-use petgraph::visit::Bfs;
-use std::collections::HashSet;
+use petgraph::visit::{Bfs, Walker};
 use std::fs;
 
 pub fn solution() {
@@ -34,12 +33,8 @@ pub fn solution() {
 
   {
     // part 1
-    let mut sg_bags = HashSet::new();
-    let mut sg_bfs = Bfs::new(&graph, "shiny gold");
-    while let Some(bag) = sg_bfs.next(&graph) {
-      sg_bags.insert(bag);
-    }
-    println!("Bags for shiny gold: {}", sg_bags.len() - 1);
+    let sg_bfs = Bfs::new(&graph, "shiny gold");
+    println!("Bags for shiny gold: {}", sg_bfs.iter(&graph).count() - 1);
   }
 
   {
