@@ -7,6 +7,7 @@ pub fn solution() {
   let content = fs::read_to_string("inputs/2020/7.txt").unwrap();
 
   let mut graph = DiGraphMap::new();
+  let mut graph2 = DiGraphMap::new();
 
   content.lines().for_each(|line| {
     let mut parts = line.trim_end_matches(".").split(" contain ");
@@ -14,6 +15,7 @@ pub fn solution() {
     // container bag always end with "bags"
     let bag = parts.next().unwrap().trim_end_matches(" bags");
     graph.add_node(bag);
+    graph2.add_node(bag);
 
     // parse contents
     let contents = parts.next().unwrap();
@@ -25,11 +27,13 @@ pub fn solution() {
         // content bag can end with "bag" or "bags"
         let cnt = cnt.trim().trim_end_matches(" bag").trim_end_matches(" bags");
         graph.add_edge(cnt, bag, num);
+        graph2.add_edge(bag, cnt, num);
       })
     }
   });
 
   {
+    // part 1
     let mut sg_bags = HashSet::new();
     let mut sg_bfs = Bfs::new(&graph, "shiny gold");
     while let Some(bag) = sg_bfs.next(&graph) {
@@ -37,4 +41,20 @@ pub fn solution() {
     }
     println!("Bags for shiny gold: {}", sg_bags.len() - 1);
   }
+
+  {
+    // part 2
+    // sum of each child: num * (1 + calc(child))
+
+    println!("Bags to buy: {}", buy_bags(&graph2, "shiny gold"));
+  }
+}
+
+fn buy_bags(graph: &DiGraphMap<&str, u32>, bag: &str) -> u32 {
+  let mut count = 0;
+  for (_, inner, weight) in graph.edges(bag) {
+    count += weight * (1 + buy_bags(graph, inner))
+  }
+
+  count
 }
