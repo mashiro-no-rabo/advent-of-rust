@@ -3,25 +3,39 @@ use std::fs;
 
 pub fn solution() {
   let content = fs::read_to_string("inputs/2020/9.txt").unwrap();
-  let numbers = content.lines().map(|x| x.parse::<i64>().unwrap());
+  let mut numbers = content.lines().map(|x| x.parse::<i64>().unwrap());
 
-  {
-    // part 1
-    let mut validators = VecDeque::with_capacity(25);
-    for n in numbers {
-      if validators.len() < 25 {
+  let mut validators = VecDeque::with_capacity(25);
+  let mut part1 = numbers.clone();
+  let first_invalid = loop {
+    let n = part1.next().unwrap();
+    if validators.len() < 25 {
+      validators.push_back(n);
+    } else {
+      if xmas_validate(&validators, n) {
+        validators.pop_front();
         validators.push_back(n);
       } else {
-        if xmas_validate(&validators, n) {
-          validators.pop_front();
-          validators.push_back(n);
-        } else {
-          println!("First invalid number: {}", n);
-          break;
-        }
+        break n;
       }
     }
-  }
+  };
+
+  let mut sets = VecDeque::new();
+  let weakness = loop {
+    let n = numbers.next().unwrap();
+
+    sets.push_back(n);
+    while sets.iter().sum::<i64>() > first_invalid && sets.len() > 2 {
+      sets.pop_front();
+    }
+    if sets.iter().sum::<i64>() == first_invalid && sets.len() >= 2 {
+      break sets.iter().min().unwrap() + sets.iter().max().unwrap();
+    }
+  };
+
+  println!("First invalid number: {}", first_invalid);
+  println!("Encryption weakness: {}", weakness);
 }
 
 fn xmas_validate(validators: &VecDeque<i64>, num: i64) -> bool {
