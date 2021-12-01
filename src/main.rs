@@ -1,6 +1,6 @@
 mod solutions;
 
-const THIS_YEAR: u32 = 2020;
+const THIS_YEAR: u32 = 2021;
 
 fn main() {
   println!(
