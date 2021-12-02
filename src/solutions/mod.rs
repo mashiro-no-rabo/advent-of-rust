@@ -15,4 +15,5 @@ macro_rules! solutions {
 
 solutions!(year2021, 2021 => [
   day1 1,
+  day2 2,
 ]);
