@@ -1,19 +1,19 @@
 macro_rules! solutions {
-  ( $year_mod:ident, $year:expr => [$( $day_mod:ident $day:expr, )+] ) => {
-    mod $year_mod;
-
-    pub fn run(y: u32, d: u8) {
+  ( [$( $day_mod:ident $day:expr, )+] ) => {
+    pub fn run(d: u8) {
       $(
-        if y == $year && d == $day {
-          $year_mod::$day_mod::solution();
+        if d == $day {
+          $day_mod::solution();
         }
       )*
     }
-
   };
 }
 
-solutions!(year2021, 2021 => [
+mod year2021;
+use year2021::*;
+
+solutions!([
   day1 1,
   day2 2,
 ]);
