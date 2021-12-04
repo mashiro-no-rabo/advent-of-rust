@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 use std::fs;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Board {
   nums: [u8; 25],
   called: [bool; 25],
+  won: bool,
 }
 
 impl Board {
@@ -12,6 +13,7 @@ impl Board {
     let mut board = Board {
       nums: [0; 25],
       called: [false; 25],
+      won: false,
     };
 
     let mut idx = 0;
@@ -32,6 +34,7 @@ impl Board {
       self.called[pos] = true;
       for i in 0..5 {
         if self.row_win(i) || self.col_win(i) {
+          self.won = true;
           return true;
         }
       }
@@ -71,11 +74,21 @@ pub fn solution() {
     boards.push(Board::from_lines(&mut lines));
   }
 
-  for call in calls {
+  let mut wins = 0;
+  let bc = boards.len();
+  for call in calls.clone() {
     for b in boards.iter_mut() {
-      if b.call(call) {
-        println!("score: {}", call as u32 * b.uncalled_sum());
-        return;
+      if !b.won && b.call(call) {
+        if wins == 0 {
+          println!("score: {}", call as u32 * b.uncalled_sum());
+        }
+
+        wins += 1;
+
+        if wins == bc {
+          println!("last win score: {}", call as u32 * b.uncalled_sum());
+          return;
+        }
       }
     }
   }
