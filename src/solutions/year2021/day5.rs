@@ -83,9 +83,5 @@ fn parse_pos<'a>(str_iter: &mut impl Iterator<Item = &'a str>) -> Pos {
 }
 
 fn count_grid(grid: &mut HashMap<Pos, u32>, pos: Pos) {
-  if let Some(n) = grid.get_mut(&pos) {
-    *n += 1;
-  } else {
-    grid.insert(pos, 1);
-  }
+  *grid.entry(pos).or_insert(0) += 1;
 }

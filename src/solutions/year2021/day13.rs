@@ -35,31 +35,6 @@ pub fn solution() {
     }
   });
 
-  let p1 = fps.clone().take(1).fold(dots.clone(), |mut acc, fp| {
-    let mut new_acc = HashSet::new();
-    for dot in acc.drain() {
-      match fp {
-        FoldPaper::Up(ys) => {
-          if dot.1 > ys {
-            new_acc.insert((dot.0, 2 * ys - dot.1));
-          } else {
-            new_acc.insert(dot);
-          }
-        }
-        FoldPaper::Left(xs) => {
-          if dot.0 > xs {
-            new_acc.insert((2 * xs - dot.0, dot.1));
-          } else {
-            new_acc.insert(dot);
-          }
-        }
-      }
-    }
-    new_acc
-  });
-
-  println!("fold once: {}", p1.len());
-
   let p2 = fps.fold(dots.clone(), |mut acc, fp| {
     let mut new_acc = HashSet::new();
     for dot in acc.drain() {
@@ -80,6 +55,7 @@ pub fn solution() {
         }
       }
     }
+    println!("left: {}", new_acc.len());
     new_acc
   });
 
