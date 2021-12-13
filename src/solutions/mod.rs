@@ -26,4 +26,5 @@ solutions!([
   day10 10,
   day11 11,
   day12 12,
+  day13 13,
 ]);
