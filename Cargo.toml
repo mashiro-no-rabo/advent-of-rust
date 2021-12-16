@@ -2,7 +2,7 @@
 name = "advent-of-rust"
 version = "0.1.0"
 authors = ["LOU Xun <aquarhead@ela.build>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 # async-std = "1.7"
