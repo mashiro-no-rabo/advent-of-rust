@@ -1,3 +1,4 @@
+use priority_queue::PriorityQueue;
 use std::{collections::HashMap, fs};
 
 pub fn solution() {
@@ -21,26 +22,30 @@ pub fn solution() {
     let mut path_risk = HashMap::new();
     path_risk.insert((0, 0), 0 as u32);
 
+    let mut pq = PriorityQueue::new();
+    pq.push((0, 0), 0);
+
     let mut visited = vec![false; risk.len()];
     let end = (rows - 1, cols - 1);
 
     loop {
-      let (&vp, &vr) = path_risk
-        .iter()
-        .filter(|&(&pos, _)| !visited[rc_to_idx(pos)])
-        .min_by_key(|&(_, risk)| risk)
-        .unwrap();
+      let (vp, vr) = pq.pop().unwrap();
+      let vr = -vr as u32;
 
-      for (nr, nc) in neighbors(vp, rows, cols) {
-        if !visited[rc_to_idx((nr, nc))] {
+      for pos in neighbors(vp, rows, cols) {
+        if !visited[rc_to_idx(pos)] {
           path_risk
-            .entry((nr, nc))
+            .entry(pos)
             .and_modify(|n_risk| {
-              if *n_risk > vr + risk[rc_to_idx((nr, nc))] {
-                *n_risk = vr + risk[rc_to_idx((nr, nc))];
+              if *n_risk > vr + risk[rc_to_idx(pos)] {
+                *n_risk = vr + risk[rc_to_idx(pos)];
               }
             })
-            .or_insert(vr + risk[rc_to_idx((nr, nc))]);
+            .or_insert(vr + risk[rc_to_idx(pos)]);
+
+          if pq.change_priority(&pos, -(path_risk[&pos] as i32)).is_none() {
+            pq.push(pos, -(path_risk[&pos] as i32));
+          }
         }
       }
 
@@ -85,15 +90,15 @@ pub fn solution() {
     let mut path_risk = HashMap::new();
     path_risk.insert((0, 0), 0 as u32);
 
+    let mut pq = PriorityQueue::new();
+    pq.push((0, 0), 0);
+
     let mut visited = vec![false; risk.len()];
     let end = (rows - 1, cols - 1);
 
     loop {
-      let (&vp, &vr) = path_risk
-        .iter()
-        .filter(|&(&pos, _)| !visited[rc_to_idx(pos)])
-        .min_by_key(|&(_, risk)| risk)
-        .unwrap();
+      let (vp, vr) = pq.pop().unwrap();
+      let vr = -vr as u32;
 
       for pos in neighbors(vp, rows, cols) {
         let idx = rc_to_idx(pos);
@@ -106,6 +111,10 @@ pub fn solution() {
               }
             })
             .or_insert(vr + risk[idx]);
+
+          if pq.change_priority(&pos, -(path_risk[&pos] as i32)).is_none() {
+            pq.push(pos, -(path_risk[&pos] as i32));
+          }
         }
       }
 
