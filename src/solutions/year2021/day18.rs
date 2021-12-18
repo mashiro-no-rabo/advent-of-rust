@@ -147,7 +147,7 @@ fn pair_reduce(mut pair: Pair) -> Pair {
 }
 
 fn pair_mag(pair: &Pair) -> u32 {
-  *pair
+  pair
     .iter()
     .fold(Vec::new(), |mut acc, pp| {
       match pp {
@@ -162,7 +162,7 @@ fn pair_mag(pair: &Pair) -> u32 {
 
       acc
     })
-    .get(0)
+    .pop()
     .unwrap()
 }
 
