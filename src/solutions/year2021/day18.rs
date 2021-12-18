@@ -44,6 +44,58 @@ fn pair_add(p1: Pair, p2: Pair) -> Pair {
 fn pair_reduce(mut pair: Pair) -> Pair {
   'top: loop {
     let mut nested = 0;
+    let ni = pair.iter().enumerate().find(|(_, pp)| {
+      match pp {
+        PairStart => {
+          nested += 1;
+        }
+        PairEnd => {
+          nested -= 1;
+        }
+        RegularNumber(_) => {
+          if nested > 4 {
+            return true;
+          }
+        }
+      }
+
+      false
+    });
+
+    if let Some((idx, _)) = ni {
+      // explode
+      let left = match pair.remove(idx) {
+        RegularNumber(x) => x,
+        _ => unimplemented!("must be a regular number"),
+      };
+      let right = match pair.remove(idx) {
+        RegularNumber(x) => x,
+        _ => unimplemented!("must be a regular number"),
+      };
+
+      let mut l = idx;
+      while l >= 1 {
+        l -= 1;
+        if let Some(RegularNumber(x)) = pair.get_mut(l) {
+          *x += left;
+          break;
+        }
+      }
+
+      for r in (idx + 1)..(pair.len() - 1) {
+        if let Some(RegularNumber(x)) = pair.get_mut(r) {
+          *x += right;
+          break;
+        }
+      }
+
+      pair.remove(idx); // end
+      pair.insert(idx, RegularNumber(0));
+      pair.remove(idx - 1); // start
+
+      continue 'top;
+    }
+
     for (idx, pp) in pair.clone().iter().enumerate() {
       match pp {
         PairStart => {
@@ -53,40 +105,6 @@ fn pair_reduce(mut pair: Pair) -> Pair {
           nested -= 1;
         }
         RegularNumber(x) => {
-          if nested > 4 {
-            // explode
-            let left = match pair.remove(idx) {
-              RegularNumber(x) => x,
-              _ => unimplemented!("must be a regular number"),
-            };
-            let right = match pair.remove(idx) {
-              RegularNumber(x) => x,
-              _ => unimplemented!("must be a regular number"),
-            };
-
-            let mut l = idx;
-            while l >= 1 {
-              l -= 1;
-              if let Some(RegularNumber(x)) = pair.get_mut(l) {
-                *x += left;
-                break;
-              }
-            }
-
-            for r in (idx + 1)..(pair.len() - 1) {
-              if let Some(RegularNumber(x)) = pair.get_mut(r) {
-                *x += right;
-                break;
-              }
-            }
-
-            pair.remove(idx); // end
-            pair.insert(idx, RegularNumber(0));
-            pair.remove(idx - 1); // start
-
-            continue 'top;
-          }
-
           if *x > 9 {
             // split
             pair.remove(idx);
