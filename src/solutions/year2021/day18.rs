@@ -55,30 +55,25 @@ fn pair_add(p1: Pair, p2: Pair) -> Pair {
 fn pair_reduce(mut pair: Pair) -> Pair {
   loop {
     let mut nested = 0;
-    let tp = pair.clone();
 
     // always explode first
-    if tp
+    if pair
       .iter()
       .enumerate()
-      .find(|(_, pp)| {
+      .find_map(|(idx, pp)| {
         match pp {
-          PairStart => {
-            nested += 1;
-          }
-          PairEnd => {
-            nested -= 1;
-          }
+          PairStart => nested += 1,
+          PairEnd => nested -= 1,
           RegularNumber(_) => {
             if nested > 4 {
-              return true;
+              return Some(idx);
             }
           }
         }
 
-        false
+        None
       })
-      .and_then(|(idx, _)| {
+      .and_then(|idx| {
         // explode
         let left = match pair.remove(idx) {
           RegularNumber(x) => x,
@@ -113,21 +108,27 @@ fn pair_reduce(mut pair: Pair) -> Pair {
       })
       .or_else(|| {
         // no explode, find split
-        tp.iter()
+        pair
+          .iter()
           .enumerate()
-          .find(|(_, pp)| {
-            if let RegularNumber(x) = pp {
-              return *x > 9;
+          .find_map(|(idx, pp)| {
+            match pp {
+              RegularNumber(x) => {
+                if *x > 9 {
+                  return Some(idx);
+                }
+              }
+              _ => {}
             }
-            false
+
+            None
           })
-          .and_then(|(idx, pp)| {
+          .and_then(|idx| {
             // split
-            let x = match pp {
+            let x = match pair.remove(idx) {
               RegularNumber(x) => x,
               _ => unimplemented!("must be a regular number"),
             };
-            pair.remove(idx);
             pair.insert(idx, PairEnd);
             pair.insert(idx, RegularNumber(x / 2 + x % 2));
             pair.insert(idx, RegularNumber(x / 2));
