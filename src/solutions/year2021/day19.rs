@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use rayon::prelude::*;
 use std::{collections::HashSet, fs};
 
 type Pos = (i32, i32, i32);
@@ -6,9 +7,8 @@ type PosSet = HashSet<Pos>;
 
 #[derive(Debug, Clone)]
 struct Scanner {
-  // id: u8,
   beacons: PosSet,
-  aligned: Option<(PosSet, PosSet, Pos)>,
+  aligned: Option<(PosSet, Pos)>,
 }
 
 pub fn solution() {
@@ -36,23 +36,28 @@ pub fn solution() {
 
     scanners.push(s);
   }
-  scanners[0].aligned = Some((scanners[0].beacons.clone(), scanners[0].beacons.clone(), (0, 0, 0)));
+  scanners[0].aligned = Some((scanners[0].beacons.clone(), (0, 0, 0)));
 
   let mut resolvers = vec![0];
 
   while let Some(idx) = resolvers.pop() {
     let resolver = scanners[idx].clone();
 
-    scanners
-      .iter_mut()
+    let nr = scanners
+      .par_iter_mut()
       .enumerate()
       .filter(|(_, s)| s.aligned.is_none())
-      .for_each(|(idx, mut s)| {
+      .filter_map(|(idx, mut s)| {
         if let Some(align) = try_overlap(&resolver, &s) {
           s.aligned = Some(align);
-          resolvers.push(idx);
+          Some(idx)
+        } else {
+          None
         }
-      });
+      })
+      .collect::<Vec<_>>();
+
+    resolvers.extend(nr);
 
     if scanners.iter().all(|s| s.aligned.is_some()) {
       break;
@@ -64,8 +69,9 @@ pub fn solution() {
     scanners
       .iter()
       .fold(HashSet::new(), |mut acc, s| {
-        s.aligned.as_ref().unwrap().1.iter().for_each(|&p| {
-          acc.insert(p);
+        let x = s.aligned.as_ref().unwrap();
+        x.0.iter().for_each(|&p| {
+          acc.insert((p.0 + x.1 .0, p.1 + x.1 .1, p.2 + x.1 .2));
         });
 
         acc
@@ -77,7 +83,7 @@ pub fn solution() {
     "max dist: {}",
     scanners
       .iter()
-      .map(|s| { s.aligned.as_ref().unwrap().2 })
+      .map(|s| { s.aligned.as_ref().unwrap().1 })
       .permutations(2)
       .map(|mut pp| {
         let p1 = pp.pop().unwrap();
@@ -173,14 +179,14 @@ fn realign(poses: &PosSet, align: &Alignment) -> PosSet {
     .collect()
 }
 
-fn try_overlap(resolver: &Scanner, other: &Scanner) -> Option<(PosSet, PosSet, Pos)> {
+fn try_overlap(resolver: &Scanner, other: &Scanner) -> Option<(PosSet, Pos)> {
   let a = resolver.aligned.as_ref().unwrap();
 
-  for am in ALIGNMENT_MAP {
+  ALIGNMENT_MAP.par_iter().find_map_any(|am| {
     let attempt = realign(&other.beacons, &am);
 
-    for ref_a in a.0.iter() {
-      for ref_b in attempt.iter() {
+    a.0.par_iter().find_map_any(|&ref_a| {
+      attempt.par_iter().find_map_any(|&ref_b| {
         let dx = ref_a.0 - ref_b.0;
         let dy = ref_a.1 - ref_b.1;
         let dz = ref_a.2 - ref_b.2;
@@ -188,11 +194,11 @@ fn try_overlap(resolver: &Scanner, other: &Scanner) -> Option<(PosSet, PosSet, P
         let b = attempt.iter().map(|&p| (p.0 + dx, p.1 + dy, p.2 + dz)).collect();
 
         if a.0.intersection(&b).count() >= 12 {
-          return Some((attempt, b, (a.2 .0 + dx, a.2 .1 + dy, a.2 .2 + dz)));
+          Some((attempt.clone(), (a.1 .0 + dx, a.1 .1 + dy, a.1 .2 + dz)))
+        } else {
+          None
         }
-      }
-    }
-  }
-
-  None
+      })
+    })
+  })
 }
