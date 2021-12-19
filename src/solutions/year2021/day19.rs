@@ -193,11 +193,7 @@ fn try_overlap(resolver: &Scanner, other: &Scanner) -> Option<(PosSet, Pos)> {
 
         let b = attempt.iter().map(|&p| (p.0 + dx, p.1 + dy, p.2 + dz)).collect();
 
-        if a.0.intersection(&b).count() >= 12 {
-          Some((attempt.clone(), (a.1 .0 + dx, a.1 .1 + dy, a.1 .2 + dz)))
-        } else {
-          None
-        }
+        (a.0.intersection(&b).count() >= 12).then(|| (attempt.clone(), (a.1 .0 + dx, a.1 .1 + dy, a.1 .2 + dz)))
       })
     })
   })
