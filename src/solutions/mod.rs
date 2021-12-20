@@ -33,4 +33,5 @@ solutions!([
   day17 17,
   day18 18,
   day19 19,
+  day20 20,
 ]);
