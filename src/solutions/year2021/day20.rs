@@ -18,8 +18,8 @@ pub fn solution() {
     });
   });
 
-  for i in -2..102 {
-    for j in -2..102 {
+  for i in -50..150 {
+    for j in -50..150 {
       if i < 0 || j < 0 || i >= SIZE || j >= SIZE {
         grid.insert((i, j), false);
       }
@@ -27,7 +27,7 @@ pub fn solution() {
   }
 
   let mut step = 0;
-  while step < 2 {
+  while step < 50 {
     step += 1;
     let new_grid = grid
       .keys()
@@ -35,9 +35,13 @@ pub fn solution() {
       .collect::<Grid>();
 
     grid = new_grid;
+
+    if step == 2 {
+      println!("2x lit: {}", grid.values().filter(|&&b| b).count());
+    }
   }
 
-  println!("lit: {}", grid.values().filter(|&&b| b).count());
+  println!("50x lit: {}", grid.values().filter(|&&b| b).count());
 }
 
 const ORDER: [(i32, i32); 9] = [
