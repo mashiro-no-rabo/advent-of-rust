@@ -20,6 +20,9 @@ pub fn solution() {
   };
 
   println!("deterministic dice: {}", play_deterministic(p1, p2));
+
+  let (a, b) = play_dirac(p1, p2, true);
+  println!("dirac dice: {}", a.max(b));
 }
 
 fn play_deterministic(mut p1: Player, mut p2: Player) -> u32 {
@@ -47,4 +50,52 @@ fn play_deterministic(mut p1: Player, mut p2: Player) -> u32 {
   };
 
   dice_times * loser_score
+}
+
+const DIRAC: [(u32, u64); 7] = [(3, 1), (4, 3), (5, 6), (6, 7), (7, 6), (8, 3), (9, 1)];
+
+fn play_dirac(p1: Player, p2: Player, play_p1: bool) -> (u64, u64) {
+  let mut ret = (0, 0);
+
+  if play_p1 {
+    for (step, us) in DIRAC {
+      let mut new_p1 = p1;
+      new_p1.pos = (new_p1.pos + step - 1) % 10 + 1;
+      new_p1.score += new_p1.pos;
+      if new_p1.score >= 21 {
+        ret.0 += us;
+      } else {
+        let (us1, us2) = play_dirac(new_p1, p2, false);
+        ret.0 += us * us1;
+        ret.1 += us * us2;
+      }
+    }
+  } else {
+    for (step, us) in DIRAC {
+      let mut new_p2 = p2;
+      new_p2.pos = (new_p2.pos + step - 1) % 10 + 1;
+      new_p2.score += new_p2.pos;
+      if new_p2.score >= 21 {
+        ret.1 += us;
+      } else {
+        let (us1, us2) = play_dirac(p1, new_p2, true);
+        ret.0 += us * us1;
+        ret.1 += us * us2;
+      }
+    }
+  }
+
+  ret
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_examples() {
+    let p1 = Player { pos: 4, score: 0 };
+    let p2 = Player { pos: 8, score: 0 };
+    assert_eq!(play_dirac(p1, p2, true), (444356092776315, 341960390180808));
+  }
 }
