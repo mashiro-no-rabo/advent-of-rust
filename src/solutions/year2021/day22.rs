@@ -52,7 +52,7 @@ pub fn solution() {
       .len(),
   );
 
-  let mut cubes = content.lines().fold(Vec::new(), |mut acc, line| {
+  let cubes = content.lines().fold(Vec::new(), |mut acc, line| {
     let mut parts = line.split_ascii_whitespace();
     let turn_on = parts.next().unwrap() == "on";
     let mut sections = parts.next().unwrap().split(",");
@@ -61,77 +61,40 @@ pub fn solution() {
     let z = parse_section(sections.next().unwrap());
     let cube = Cube { x, y, z };
 
+    acc = acc
+      .into_iter()
+      .flat_map(|pc| {
+        if let Some(coll) = collide(pc, cube) {
+          // collided replace it with shards
+          [
+            [(coll.x.0, coll.x.1), (pc.x.0, coll.x.0 - 1), (coll.x.1 + 1, pc.x.1)],
+            [(coll.y.0, coll.y.1), (pc.y.0, coll.y.0 - 1), (coll.y.1 + 1, pc.y.1)],
+            [(coll.z.0, coll.z.1), (pc.z.0, coll.z.0 - 1), (coll.z.1 + 1, pc.z.1)],
+          ]
+          .into_iter()
+          .multi_cartesian_product()
+          .skip(1) // skip the collision cube
+          .filter_map(|mut ss| {
+            let z = ss.pop().unwrap();
+            let y = ss.pop().unwrap();
+            let x = ss.pop().unwrap();
+
+            (section_valid(x) && section_valid(y) && section_valid(z)).then(|| Cube { x, y, z })
+          })
+          .collect()
+        } else {
+          // all good, just wrap it
+          vec![pc]
+        }
+      })
+      .collect();
+
     if turn_on {
       acc.push(cube);
-    } else {
-      acc = acc
-        .into_iter()
-        .flat_map(|pc| {
-          if let Some(coll) = collide(pc, cube) {
-            // collided with a off step, replace it with shards
-            [
-              [(coll.x.0, coll.x.1), (pc.x.0, coll.x.0 - 1), (coll.x.1 + 1, pc.x.1)],
-              [(coll.y.0, coll.y.1), (pc.y.0, coll.y.0 - 1), (coll.y.1 + 1, pc.y.1)],
-              [(coll.z.0, coll.z.1), (pc.z.0, coll.z.0 - 1), (coll.z.1 + 1, pc.z.1)],
-            ]
-            .into_iter()
-            .multi_cartesian_product()
-            .skip(1) // skip the collision cube, it's off
-            .filter_map(|mut ss| {
-              let z = ss.pop().unwrap();
-              let y = ss.pop().unwrap();
-              let x = ss.pop().unwrap();
-
-              (section_valid(x) && section_valid(y) && section_valid(z)).then(|| Cube { x, y, z })
-            })
-            .collect()
-          } else {
-            // all good, just wrap it
-            vec![pc]
-          }
-        })
-        .collect();
     }
 
     acc
   });
-
-  // resolve collides
-  'resolve: loop {
-    for i in 0..cubes.len() {
-      for j in 0..i {
-        if i != j {
-          let nc = cubes[i];
-          let pc = cubes[j];
-          if let Some(coll) = collide(pc, nc) {
-            cubes.remove(i);
-
-            [
-              [(coll.x.0, coll.x.1), (nc.x.0, coll.x.0 - 1), (coll.x.1 + 1, nc.x.1)],
-              [(coll.y.0, coll.y.1), (nc.y.0, coll.y.0 - 1), (coll.y.1 + 1, nc.y.1)],
-              [(coll.z.0, coll.z.1), (nc.z.0, coll.z.0 - 1), (coll.z.1 + 1, nc.z.1)],
-            ]
-            .into_iter()
-            .multi_cartesian_product()
-            .skip(1) // skip the collision cube, it's counted in `pc`
-            .for_each(|mut ss| {
-              let z = ss.pop().unwrap();
-              let y = ss.pop().unwrap();
-              let x = ss.pop().unwrap();
-
-              if section_valid(x) && section_valid(y) && section_valid(z) {
-                cubes.push(Cube { x, y, z });
-              }
-            });
-
-            continue 'resolve;
-          }
-        }
-      }
-    }
-
-    break;
-  }
 
   println!(
     "final on: {}",
