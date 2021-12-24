@@ -9,7 +9,12 @@ fn main() {
 "#
   );
 
-  let day = std::env::args().skip(1).next().unwrap().parse::<u8>().unwrap();
+  let day = std::env::args()
+    .skip(1)
+    .next()
+    .expect("need day")
+    .parse::<u8>()
+    .expect("day is not number");
 
   solutions::run(day);
 }
